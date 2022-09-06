@@ -1,5 +1,12 @@
 import { async } from "@firebase/util";
-import { signInWithPopup, GithubAuthProvider, GoogleAuthProvider, getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import {
+    signInWithPopup,
+    GithubAuthProvider,
+    GoogleAuthProvider,
+    getAuth, 
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword
+} from "firebase/auth";
 import { authService, firebaseInstance } from "firebaseConfig";
 import React, { useState } from "react";
 
@@ -35,6 +42,7 @@ const Auth = () => {
         setNewAcount(prev => !prev);
     }
     const onSocialClick = async (event) => {
+        const auth = getAuth();
         const {
             target: {name}
         } = event;
@@ -44,8 +52,7 @@ const Auth = () => {
         } else if (name === "github"){
             provider = new GithubAuthProvider();
         }
-        const data = await signInWithPopup(authService, provider);
-        console.log(data);
+        await signInWithPopup(auth, provider);
     };
 
     return (
