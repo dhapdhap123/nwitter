@@ -1,52 +1,35 @@
-import { dbService } from "firebaseConfig";
+import { dbService, storageService } from "firebaseConfig";
 import React, { useEffect, useState } from "react";
-import { getDocs, query, collection, addDoc, serverTimestamp, QuerySnapshot } from "firebase/firestore";
-import { async } from "@firebase/util";
+import { orderBy, onSnapshot, query, collection } from "firebase/firestore";
+import Nweet from "component/Nweet";
+import NweetFactory from "../component/NweetFactory";
+
 
 const Home = ({ userObj }) => {
-    console.log(userObj);
-    const [nweet, setNweet] = useState("");
     const [nweets, setNweets] = useState([]);
-    const getNweets = async() => {
-        const q = query(collection(dbService, "nweets")); 
-        const QuerySnapshot = await getDocs(q);
-        QuerySnapshot.forEach((doc) => {
-            const nweetObj = {
-                ...doc.data(),
-                id: doc.id,
-            }
-            setNweets(prev => [nweetObj, ...prev]);
-        });
-    }
+
     useEffect(() => {
-        getNweets();
+        const q = query(
+            collection(dbService, "nweets"),
+            orderBy("createAt", "desc")
+        );
+        onSnapshot(q, (snapshot) => {
+            const nweetArray = snapshot.docs.map((doc) => {return {
+                id: doc.id,
+                ...doc.data(),
+            }});
+            setNweets(nweetArray);
+        })
     }, []);
-    const onSubmit = async (e) => {
-        e.preventDefault();
-        await addDoc(collection(dbService, "nweets"), {
-            text: nweet,
-            createAt: serverTimestamp(),
-            creatorId: userObj.uid,
-        });
-        setNweet("");
-    };
-    const onChange = (e) =>{
-        setNweet(e.target.value);
-    }
     return(
         <div>
-            <form onSubmit={onSubmit}>
-                <input onChange={onChange}
-                value={nweet}
-                type="text"
-                placeholder="what's on your mind?"
-                maxLength={120} />
-                <input type="submit" value="Nweet" />
-            </form>
+            <NweetFactory userObj={userObj} />
             <div>
-                {nweets.map(nweet => <div key={nweet.id}>
-                    <h4>{nweet.nweet}</h4>
-                </div>)}
+                {nweets.map((nweet) => 
+                    <Nweet
+                        key={nweet.id}
+                        nweetObj={nweet}
+                        isOwner={nweet.creatorId === userObj.uid}/>)}
             </div>
         </div>
     );
